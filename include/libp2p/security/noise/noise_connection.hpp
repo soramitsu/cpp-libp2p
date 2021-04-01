@@ -21,6 +21,11 @@ namespace libp2p::connection {
   class NoiseConnection : public SecureConnection,
                           public std::enable_shared_from_this<NoiseConnection> {
    public:
+    struct WriteContext {
+      size_t bytes_written;
+      size_t to_write;
+    };
+
     ~NoiseConnection() override = default;
 
     NoiseConnection(
@@ -59,6 +64,9 @@ namespace libp2p::connection {
     outcome::result<crypto::PublicKey> remotePublicKey() const override;
 
    private:
+    void write(gsl::span<const uint8_t> in, size_t bytes, WriteContext ctx,
+               WriteCallbackFunc cb);
+
     std::shared_ptr<RawConnection> raw_connection_;
     crypto::PublicKey local_;
     crypto::PublicKey remote_;
@@ -68,7 +76,6 @@ namespace libp2p::connection {
     std::shared_ptr<common::ByteArray> frame_buffer_;
     std::shared_ptr<security::noise::InsecureReadWriter> framer_;
     size_t already_read_;
-    size_t already_wrote_;
     common::ByteArray writing_;
     log::Logger log_ = log::createLogger("NoiseConnection", "noise");
   };
